@@ -31,6 +31,13 @@ module GarbageMan
     end
 
     def collect
+      # if we are starting to queue requests turn on gc, we could be in trouble
+      if queuing?
+        debug "queuing request, enabling gc"
+        GC.enable
+        return
+      end
+
       return unless can_collect?
 
       write_gc_yaml server_index, 'starting'
@@ -105,6 +112,14 @@ module GarbageMan
       fiber_poll && fiber_poll.busy_fibers.size > 0
     end
 
+    def queuing?
+      fiber_poll && fiber_poll.queue.size > 0
+    end
+
+    def not_queuing?
+      ! queuing?
+    end
+
     # no traffic and we've been selected by health check
     def can_collect?
       @will_collect && ! busy? && Thin::Backends::Base.num_connections == 0
@@ -121,21 +136,21 @@ module GarbageMan
     end
 
     def can_disable?
-      Config.thin_config.has_key?('socket') && not_alone?
+      Config.thin_config.has_key?('socket') && not_queuing? && min_running_servers?
     end
 
-    # make sure I'm not the only server running
-    def not_alone?
+    def num_running_servers
+      count = 0
       Config.thin_config['servers'].times do |i|
         next if i == server_index
-        file = socket_file i
-        if File.exists?(file)
-          return true
-        end
+        count += 1 if File.exists?(socket_file(i))
       end
+      count
+    end
 
-      debug "no other servers found"
-      false
+    # make sure there are 3 or more servers running before disabling gc
+    def min_running_servers?
+      num_servers >= Config.min_servers_to_disable_gc && num_running_servers >= Config.min_servers_to_disable_gc
     end
 
     def socket_file(index)

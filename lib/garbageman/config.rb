@@ -19,5 +19,6 @@ module GarbageMan
     def self.thin_config; @@thin_config ||= YAML.load_file("./config/thin.yml"); end
 
     def self.num_request_before_collecting; 10; end
+    def self.min_servers_to_disable_gc; 3; end
   end
 end

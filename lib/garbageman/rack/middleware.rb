@@ -13,7 +13,8 @@ module GarbageMan
         if env['REQUEST_PATH'] == GarbageMan::Config.gc_health_check_request_path
           GarbageMan::Collector.instance.healthy? ? @@ok_response : @@gc_response
         else
-          GarbageMan::Collector.instance.logger.error("still receiving traffic even though I'm waiting to GC") if GarbageMan::Collector.instance.will_collect
+          # this is not 100% preventable with nginx, nginx will still send requests while waiting for the health check response
+          GarbageMan::Collector.instance.logger.debug("still receiving traffic even though I'm waiting to GC") if GarbageMan::Collector.instance.will_collect
           @app.call(env)
         end
       end
