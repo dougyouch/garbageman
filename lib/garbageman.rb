@@ -20,3 +20,8 @@ module GarbageMan
     @logger = logger
   end
 end
+
+require 'garbageman/config'
+require 'garbageman/ext/thin'
+require 'garbageman/rack/middleware'
+require 'garbageman/collector'

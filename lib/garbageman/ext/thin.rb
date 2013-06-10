@@ -1,23 +1,25 @@
 module Thin
   module Backends
     class Base
-      cattr_reader :num_connections
       @@num_connections = 0
-      cattr_accessor :server_index
+      def self.num_connections; @@num_connections; end
       @@server_index = nil
+      def self.server_index; @@server_index; end
+      def self.server_index=(index); @@server_index = index; end
 
       def connection_finished_with_count(connection)
         connection_finished_without_count(connection).tap { @@num_connections -= 1 }
       end
-      alias_method_chain :connection_finished, :count
+      alias connection_finished_without_count connection_finished
+      alias connection_finished connection_finished_with_count
 
       protected
 
       def initialize_connection_with_count(connection)
         initialize_connection_without_count(connection).tap { @@num_connections += 1 }
       end
-      alias initialize_connection_without_count count
-      alias count initialize_connection_with_count
+      alias initialize_connection_without_count initialize_connection
+      alias initialize_connection initialize_connection_with_count
     end
 
     class TcpServer

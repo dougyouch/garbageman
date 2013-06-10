@@ -66,7 +66,7 @@ module GarbageMan
     end
 
     def num_servers
-      self.thin_config['servers']
+      Config.thin_config['servers']
     end
 
     def write_gc_yaml(index, status)
@@ -77,7 +77,7 @@ module GarbageMan
     def select_next_server
       Config.thin_config['servers'].times do |i|
         next_server_index = (server_index + i + 1) % num_servers
-        file = self.thin_config['socket'].sub '.sock', ".#{next_server_index}.sock"
+        file = socket_file next_server_index
         next unless File.exists?(file)
         debug "selected #{next_server_index}"
         write_gc_yaml next_server_index, 'selected'
@@ -91,9 +91,13 @@ module GarbageMan
       @will_collect = false
     end
 
+    def busy?
+      fiber_poll && fiber_poll.busy_fibers.size > 0
+    end
+
     # no traffic and we've been selected by health check
     def can_collect?
-      @will_collect && fiber_pool.busy_fibers.size == 0 && Thin::Backends::Base.num_connections == 0
+      @will_collect && ! busy? && Thin::Backends::Base.num_connections == 0
     end
 
     # if the request count is high enough and it is our turn
@@ -114,7 +118,7 @@ module GarbageMan
     def not_alone?
       Config.thin_config['servers'].times do |i|
         next if i == server_index
-        file = self.thin_config['socket'].sub '.sock', ".#{i}.sock"
+        file = socket_file i
         if File.exists?(file)
           return true
         end
@@ -122,6 +126,10 @@ module GarbageMan
 
       debug "no other servers found"
       false
+    end
+
+    def socket_file(index)
+      Config.thin_config['socket'].sub '.sock', ".#{index}.sock"
     end
 
     def logger; GarbageMan.logger; end
