@@ -59,6 +59,16 @@ module GarbageMan
       write_gc_yaml server_index, 'selected'
     end
 
+    def logger; GarbageMan.logger; end
+
+    def debug(msg)
+      logger.debug msg
+    end
+
+    def info(msg)
+      logger.info msg
+    end
+
     private
 
     def server_index
@@ -130,16 +140,6 @@ module GarbageMan
 
     def socket_file(index)
       Config.thin_config['socket'].sub '.sock', ".#{index}.sock"
-    end
-
-    def logger; GarbageMan.logger; end
-
-    def debug(msg)
-      logger.debug msg
-    end
-
-    def info(msg)
-      logger.info msg
     end
   end
 end
