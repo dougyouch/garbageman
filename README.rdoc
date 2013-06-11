@@ -1,6 +1,6 @@
 = garbageman
 
-Description goes here.
+Rubies GC can take a long time.  And while ruby is garbage collecting nothing else can happen.  This is especially bad in an async environment like EventMachine where it is a single thread process.  The GarbageMan disable rubies GC while processing requests.  And while it is GCing it takes it self out of the nginx upstream.
 
 == Contributing to garbageman
  
