@@ -96,21 +96,6 @@ module GarbageMan
       logger.info msg
     end
 
-    private
-
-    def server_index
-      Thin::Backends::Base.server_index
-    end
-
-    def num_servers
-      Config.thin_config['servers']
-    end
-
-    def write_gc_yaml(index, status)
-      config = {'gc' => {'server' => index, 'status' => status}}
-      File.open(Config.gc_yaml_file, 'w+') { |f| f.write config.to_yaml }
-    end
-
     def select_next_server
       return unless @will_select_next_server
       @will_select_next_server = false
@@ -124,6 +109,21 @@ module GarbageMan
         return true
       end
       false
+    end
+
+    private
+
+    def server_index
+      Thin::Backends::Base.server_index
+    end
+
+    def num_servers
+      Config.thin_config['servers']
+    end
+
+    def write_gc_yaml(index, status)
+      config = {'gc' => {'server' => index, 'status' => status}}
+      File.open(Config.gc_yaml_file, 'w+') { |f| f.write config.to_yaml }
     end
 
     def reset
