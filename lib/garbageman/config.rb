@@ -10,7 +10,7 @@ module GarbageMan
     def self.gc_config
       begin
         File.exists?(self.gc_yaml_file) ? YAML.load_file(self.gc_yaml_file) : nil
-      rescue Errno::ENOENT => e
+      rescue Exception => e
         nil
       end
     end
