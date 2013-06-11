@@ -66,7 +66,7 @@ module GarbageMan
       GC.enable
       GC.start
       diff = (Time.now - starts) * 1000
-      info "GC took #{'%.2f' % diff}ms"
+      info "GC took #{'%.2f' % diff}ms for #{@request_count} requests"
       write_gc_yaml server_index, NEXT_SERVER
 
       reset
