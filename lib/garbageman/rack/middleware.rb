@@ -15,6 +15,7 @@ module GarbageMan
         else
           # this is not 100% preventable with nginx, nginx will still send requests while waiting for the health check response
           GarbageMan::Collector.instance.logger.debug("still receiving traffic even though I'm waiting to GC") if GarbageMan::Collector.instance.will_collect
+          GarbageMan::Collector.instance.select_next_server if GarbageMan::Collector::instance.will_select_next_server
           @app.call(env)
         end
       end

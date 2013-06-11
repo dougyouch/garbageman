@@ -13,7 +13,7 @@ module GarbageMan
 
     include Status
 
-    attr_accessor :request_count, :will_collect
+    attr_accessor :request_count, :will_collect, :will_select_next_server
     attr_reader :fiber_poll
 
     def initialize
@@ -33,8 +33,11 @@ module GarbageMan
       end
 
       if select_next_server?
-        EM.next_tick do
+        if @will_select_next_server
           select_next_server
+        else
+          # wait until we receive another request before selecting the next server
+          @will_select_next_server = true
         end
         return true
       end
@@ -109,6 +112,9 @@ module GarbageMan
     end
 
     def select_next_server
+      return unless @will_select_next_server
+      @will_select_next_server = false
+
       Config.thin_config['servers'].times do |i|
         next_server_index = (server_index + i + 1) % num_servers
         file = socket_file next_server_index
@@ -123,6 +129,7 @@ module GarbageMan
     def reset
       @request_count = 0
       @will_collect = false
+      @will_select_next_server = false
     end
 
     def busy?
