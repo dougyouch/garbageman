@@ -11,6 +11,7 @@ module GarbageMan
       reset
     end
 
+    # for use with rack-fiber_pool
     def register_fiber_pool(pool)
       @fiber_poll = pool
     end
@@ -142,8 +143,7 @@ module GarbageMan
     def num_running_servers
       count = 0
       Config.thin_config['servers'].times do |i|
-        next if i == server_index
-        count += 1 if File.exists?(socket_file(i))
+        count += 1 if i == server_index || File.exists?(socket_file(i))
       end
       count
     end

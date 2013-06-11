@@ -23,6 +23,6 @@ end
 
 require 'garbageman/config'
 require 'garbageman/ext/thin'
-require 'garbageman/ext/fiber_pool'
+require 'garbageman/ext/fiber_pool' if defined?(FiberPool)
 require 'garbageman/rack/middleware'
 require 'garbageman/collector'
