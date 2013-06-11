@@ -98,6 +98,7 @@ module GarbageMan
 
     def select_next_server
       return unless @will_select_next_server
+      return unless @request_count >= Config.num_request_before_selecting_next_server
       @will_select_next_server = false
 
       Config.thin_config['servers'].times do |i|
@@ -164,8 +165,16 @@ module GarbageMan
       config && config['gc'] && config['gc']['server'] && config['gc']['server'] == server_index && config['gc']['status'] == 'next_server'
     end
 
+    def forcing_gc?
+      File.exists?(Config.enable_gc_file)
+    end
+ 
+    def not_forcing_gc?
+      ! forcing_gc?
+    end
+
     def can_disable?
-      Config.thin_config.has_key?('socket') && not_queuing? && min_running_servers?
+      Config.thin_config.has_key?('socket') && not_queuing? && not_forcing_gc? && enough_running_servers?
     end
 
     def num_running_servers
@@ -177,7 +186,7 @@ module GarbageMan
     end
 
     # make sure there are 3 or more servers running before disabling gc
-    def min_running_servers?
+    def enough_running_servers?
       num_servers >= Config.min_servers_to_disable_gc && num_running_servers >= Config.min_servers_to_disable_gc
     end
 

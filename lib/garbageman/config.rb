@@ -18,7 +18,12 @@ module GarbageMan
     @@thin_config = nil
     def self.thin_config; @@thin_config ||= YAML.load_file("./config/thin.yml"); end
 
-    def self.num_request_before_collecting; 10; end
-    def self.min_servers_to_disable_gc; 3; end
+    @@enable_gc_file = "./data/enable_gc"
+    def self.enable_gc_file; @@enable_gc_file; end
+
+    def self.num_request_before_collecting; 20; end
+    # absolutely make sure we are in the pool again before selecting next server
+    def self.num_request_before_selecting_next_server; 10; end
+    def self.min_servers_to_disable_gc; 2; end
   end
 end
