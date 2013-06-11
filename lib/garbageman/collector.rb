@@ -4,6 +4,15 @@ module GarbageMan
   class Collector
     include Singleton
 
+    module Status
+      SELECTED = 'selected'
+      WILL_COLLECT = 'will_collect'
+      STARTING = 'starting'
+      NEXT_SERVER = 'next_server'
+    end
+
+    include Status
+
     attr_accessor :request_count, :will_collect
     attr_reader :fiber_poll
 
@@ -23,8 +32,15 @@ module GarbageMan
         return true
       end
 
+      if select_next_server?
+        EM.next_tick do
+          select_next_server
+        end
+        return true
+      end
+
       if should_collect?
-        write_gc_yaml server_index, 'will_collect'
+        write_gc_yaml server_index, WILL_COLLECT
         false
       else
         true
@@ -41,18 +57,18 @@ module GarbageMan
 
       return unless can_collect?
 
-      write_gc_yaml server_index, 'starting'
+      write_gc_yaml server_index, STARTING
       debug "starting gc"
       starts = Time.now
       GC.enable
       GC.start
       diff = (Time.now - starts) * 1000
       info "GC took #{'%.2f' % diff}ms"
-      write_gc_yaml server_index, 'finished'
+      write_gc_yaml server_index, NEXT_SERVER
 
       reset
 
-      if can_disable? && select_next_server
+      if can_disable?
         debug "disabling gc"
         GC.disable
       else
@@ -64,7 +80,7 @@ module GarbageMan
     def create_gc_yaml
       return unless server_index
       return if File.exists?(Config.gc_yaml_file)
-      write_gc_yaml server_index, 'selected'
+      write_gc_yaml server_index, SELECTED
     end
 
     def logger; GarbageMan.logger; end
@@ -98,7 +114,7 @@ module GarbageMan
         file = socket_file next_server_index
         next unless File.exists?(file)
         debug "selected #{next_server_index}"
-        write_gc_yaml next_server_index, 'selected'
+        write_gc_yaml next_server_index, SELECTED
         return true
       end
       false
@@ -134,6 +150,11 @@ module GarbageMan
     def current_server?
       config = Config.gc_config
       config && config['gc'] && config['gc']['server'] && config['gc']['server'] == server_index
+    end
+
+    def select_next_server?
+      config = Config.gc_config
+      config && config['gc'] && config['gc']['server'] && config['gc']['server'] == server_index && config['gc']['status'] == 'next_server'
     end
 
     def can_disable?
