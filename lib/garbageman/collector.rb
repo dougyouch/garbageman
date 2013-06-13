@@ -13,10 +13,11 @@ module GarbageMan
 
     include Status
 
-    attr_accessor :request_count, :will_collect, :will_select_next_server
+    attr_accessor :request_count, :will_collect, :will_select_next_server, :show_gc_times
     attr_reader :fiber_poll
 
     def initialize
+      @show_gc_times = true
       reset
     end
 
@@ -66,7 +67,7 @@ module GarbageMan
       GC.enable
       GC.start
       diff = (Time.now - starts) * 1000
-      info "GC took #{'%.2f' % diff}ms for #{@request_count} requests"
+      info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times
       write_gc_yaml server_index, NEXT_SERVER
 
       reset
