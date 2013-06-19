@@ -188,7 +188,6 @@ module GarbageMan
     def can_disable?
       uses_sockets? &&
         not_queuing? &&
-        have_not_waited_too_long_to_gc? &&
         not_forcing_gc? &&
         enough_running_servers?
     end
@@ -213,10 +212,6 @@ module GarbageMan
     def waited_too_long_to_gc?
       return false unless @last_gc_finished_at
       (Time.now - @last_gc_finished_at) >= Config.max_time_without_gc
-    end
-
-    def have_not_waited_too_long_to_gc?
-      ! waited_too_long_to_gc?
     end
   end
 end
