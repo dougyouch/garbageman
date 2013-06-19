@@ -14,7 +14,7 @@ module GarbageMan
     include Status
 
     attr_accessor :request_count, :will_collect, :will_select_next_server, :show_gc_times
-    attr_reader :fiber_poll
+    attr_reader :fiber_poll, :last_gc_finished_at
 
     def initialize
       @show_gc_times = true
@@ -66,7 +66,8 @@ module GarbageMan
       starts = Time.now
       GC.enable
       GC.start
-      diff = (Time.now - starts) * 1000
+      @last_gc_finished_at = Time.now
+      diff = (@last_gc_finished_at - starts) * 1000
       info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times
       write_gc_yaml server_index, NEXT_SERVER
 
@@ -174,8 +175,16 @@ module GarbageMan
       ! forcing_gc?
     end
 
+    def uses_sockets?
+      Config.thin_config.has_key?('socket')
+    end
+
     def can_disable?
-      Config.thin_config.has_key?('socket') && not_queuing? && not_forcing_gc? && enough_running_servers?
+      uses_sockets? &&
+        not_queuing? &&
+        have_not_waited_too_long_to_gc? &&
+        not_forcing_gc? &&
+        enough_running_servers?
     end
 
     def num_running_servers
@@ -193,6 +202,15 @@ module GarbageMan
 
     def socket_file(index)
       Config.thin_config['socket'].sub '.sock', ".#{index}.sock"
+    end
+
+    def waited_too_long_to_gc?
+      return false unless @last_gc_finished_at
+      (Time.now - @last_gc_finished_at) >= Config.max_time_without_gc
+    end
+
+    def have_not_waited_too_long_to_gc?
+      ! waited_too_long_to_gc?
     end
   end
 end

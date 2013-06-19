@@ -25,5 +25,7 @@ module GarbageMan
     # absolutely make sure we are in the pool again before selecting next server
     def self.num_request_before_selecting_next_server; 10; end
     def self.min_servers_to_disable_gc; 2; end
+    # if we have not GC in 20 seconds turn back on GC
+    def self.max_time_without_gc; 20; end
   end
 end
