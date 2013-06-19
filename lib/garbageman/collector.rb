@@ -59,6 +59,12 @@ module GarbageMan
         return
       end
 
+      if waited_too_long_to_gc?
+        debug "waited too long to gc"
+        GC.enable
+        return
+      end
+
       return unless can_collect?
 
       write_gc_yaml server_index, STARTING
