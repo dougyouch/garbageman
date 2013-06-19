@@ -211,6 +211,7 @@ module GarbageMan
 
     def waited_too_long_to_gc?
       return false unless @last_gc_finished_at
+      return false if @will_collect
       (Time.now - @last_gc_finished_at) >= Config.max_time_without_gc
     end
   end
