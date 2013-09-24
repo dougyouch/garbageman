@@ -7,6 +7,10 @@ module GarbageMan
     def self.gc_yaml_file; @@gc_yaml_file ||= "./data/gc.yml"; end
     def self.gc_yaml_file=(file); @@gc_yaml_file = file; end
 
+    @@gc_yaml_tmp_file = nil
+    def self.gc_yaml_tmp_file; @@gc_yaml_tmp_file ||= "./data/.tmp.gc.yml"; end
+    def self.gc_yaml_tmp_file=(file); @@gc_yaml_tmp_file = file; end
+
     def self.gc_config
       begin
         File.exists?(self.gc_yaml_file) ? YAML.load_file(self.gc_yaml_file) : nil

@@ -1,4 +1,5 @@
 require 'singleton'
+require 'fileutils'
 
 module GarbageMan
   class Collector
@@ -12,6 +13,16 @@ module GarbageMan
     end
 
     include Status
+
+    module Messages
+      CAN_NOT_DISABLE_GC = "can not disable gc"
+      QUEUING_REQUESTS = "queuing request, enabling gc"
+      WAITED_TOO_LONG = "waited too long to gc"
+      DISABLE_GC = "disabling gc"
+      CANT_TURN_OFF = "enabling gc, can not turn off"
+    end
+
+    include Messages
 
     attr_accessor :request_count, :will_collect, :will_select_next_server, :show_gc_times
     attr_reader :fiber_poll, :last_gc_finished_at
@@ -28,7 +39,7 @@ module GarbageMan
 
     def healthy?
       unless can_disable?
-        debug "can not disable gc"
+        debug CAN_NOT_DISABLE_GC
         GC.enable
         return true
       end
@@ -54,15 +65,11 @@ module GarbageMan
     def collect
       # if we are starting to queue requests turn on gc, we could be in trouble
       if queuing?
-        debug "queuing request, enabling gc"
+        debug QUEUING_REQUESTS
         GC.enable
-        return
-      end
-
-      if waited_too_long_to_gc?
-        debug "waited too long to gc"
+      elsif waited_too_long_to_gc?
+        debug WAITED_TOO_LONG
         GC.enable
-        return
       end
 
       return unless can_collect?
@@ -80,10 +87,10 @@ module GarbageMan
       reset
 
       if can_disable?
-        debug "disabling gc"
+        debug DISABLE_GC
         GC.disable
       else
-        debug "enabling gc, can not turn off"
+        debug CANT_TURN_OFF
         GC.enable
       end
     end
@@ -130,9 +137,12 @@ module GarbageMan
       Config.thin_config['servers']
     end
 
+    WRITE_MOVE_OPTIONS = {:force => true}
     def write_gc_yaml(index, status)
       config = {'gc' => {'server' => index, 'status' => status}}
-      File.open(Config.gc_yaml_file, 'w+') { |f| f.write config.to_yaml }
+      File.open(Config.gc_yaml_tmp_file, 'w+') { |f| f.write config.to_yaml }
+      # atomic write
+      FileUtils.mv Config.gc_yaml_tmp_file, Config.gc_yaml_file, WRITE_MOVE_OPTIONS
     end
 
     def reset
@@ -211,7 +221,6 @@ module GarbageMan
 
     def waited_too_long_to_gc?
       return false unless @last_gc_finished_at
-      return false if @will_collect
       (Time.now - @last_gc_finished_at) >= Config.max_time_without_gc
     end
   end
