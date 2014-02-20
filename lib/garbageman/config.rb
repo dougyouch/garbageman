@@ -29,6 +29,11 @@ module GarbageMan
     def self.num_request_before_collecting; @@num_request_before_collecting ||= 40; end
     def self.num_request_before_collecting=(val); @@num_request_before_collecting = val; end
 
+    # can configure to turn on gc if server starts queuing requests
+    @@check_request_queue = false
+    def self.check_request_queue?; @@check_request_queue; end
+    def self.check_request_queue=(val); @@check_request_queue = val; end
+
     # absolutely make sure we are in the pool again before selecting next server
     def self.num_request_before_selecting_next_server; 10; end
     def self.min_servers_to_disable_gc; 3; end

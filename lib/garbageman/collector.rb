@@ -25,10 +25,12 @@ module GarbageMan
     include Messages
 
     attr_accessor :request_count, :will_collect, :will_select_next_server, :show_gc_times
-    attr_reader :fiber_poll, :last_gc_finished_at
+    attr_reader :fiber_poll, :last_gc_finished_at, :before_gc_callbacks, :after_gc_callbacks
 
     def initialize
       @show_gc_times = true
+      @before_gc_callbacks = []
+      @after_gc_callbacks = []
       reset
     end
 
@@ -64,7 +66,7 @@ module GarbageMan
 
     def collect
       # if we are starting to queue requests turn on gc, we could be in trouble
-      if queuing?
+      if Config.check_request_queue? && queuing?
         debug QUEUING_REQUESTS
         GC.enable
       elsif waited_too_long_to_gc?
@@ -73,6 +75,8 @@ module GarbageMan
       end
 
       return unless can_collect?
+
+      before_gc_callbacks.each(&:call)
 
       write_gc_yaml server_index, STARTING
       debug "starting gc"
@@ -83,6 +87,8 @@ module GarbageMan
       diff = (@last_gc_finished_at - starts) * 1000
       info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times
       write_gc_yaml server_index, NEXT_SERVER
+
+      after_gc_callbacks.each(&:call)
 
       reset
 
