@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "garbageman"
-  s.version = "0.1.21"
+  s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Doug Youch"]
-  s.date = "2013-10-05"
+  s.date = "2014-02-20"
   s.description = "Disable GC while processing requests.  By using nginx upstream health checks to garbage collect when no one is there."
   s.email = "doug@sessionm.com"
   s.extra_rdoc_files = [
