@@ -76,13 +76,13 @@ module Thin
       @@after_startup_callbacks = nil
     end
 
-    def stop_with_callbacks!
-      stop_without_callbacks!.tap do
+    def stop_with_callbacks
+      stop_without_callbacks.tap do
         @@close_callbacks.each { |c| c.call } if @@close_callbacks
         @@close_callbacks = nil
       end
     end
-    alias stop_without_callbacks! stop!
-    alias stop! stop_with_callbacks!
+    alias stop_without_callbacks stop
+    alias stop stop_with_callbacks
   end
 end
