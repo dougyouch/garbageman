@@ -41,7 +41,7 @@ module GarbageMan
 
     def healthy?
       unless can_disable?
-        debug CAN_NOT_DISABLE_GC
+        warn CAN_NOT_DISABLE_GC
         GC.enable
         return true
       end
@@ -67,10 +67,10 @@ module GarbageMan
     def collect
       # if we are starting to queue requests turn on gc, we could be in trouble
       if Config.check_request_queue? && queuing?
-        debug QUEUING_REQUESTS
+        warn QUEUING_REQUESTS
         GC.enable
       elsif waited_too_long_to_gc?
-        debug WAITED_TOO_LONG
+        warn WAITED_TOO_LONG
         GC.enable
       end
 
@@ -96,7 +96,7 @@ module GarbageMan
         debug DISABLE_GC
         GC.disable
       else
-        debug CANT_TURN_OFF
+        warn CANT_TURN_OFF
         GC.enable
       end
     end
@@ -115,6 +115,10 @@ module GarbageMan
 
     def info(msg)
       logger.info msg
+    end
+
+    def warn(msg)
+      logger.warn msg
     end
 
     def select_next_server
