@@ -44,7 +44,7 @@ module GarbageMan
     def self.min_servers_to_disable_gc=(n); @@min_servers_to_disable_gc = n; end
 
     # if we have not GC in 40 seconds turn back on GC
-    @@max_time_without_gc = 40
+    @@max_time_without_gc = 60
     def self.max_time_without_gc; @@max_time_without_gc; end
     def self.max_time_without_gc=(time); @max_time_without_gc = time; end
   end
