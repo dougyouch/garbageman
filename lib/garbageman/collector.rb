@@ -17,7 +17,7 @@ module GarbageMan
     module Messages
       CAN_NOT_DISABLE_GC = "can not disable gc"
       QUEUING_REQUESTS = "queuing request, enabling gc"
-      WAITED_TOO_LONG = "waited too long to gc"
+      WAITED_TOO_LONG = "waited %.2f seconds to gc"
       DISABLE_GC = "disabling gc"
       CANT_TURN_OFF = "enabling gc, can not turn off"
     end
@@ -70,7 +70,7 @@ module GarbageMan
         warn QUEUING_REQUESTS
         GC.enable
       elsif waited_too_long_to_gc?
-        warn WAITED_TOO_LONG
+        warn (WAITED_TOO_LONG % (Time.now - @last_gc_finished_at))
         GC.enable
       end
 
