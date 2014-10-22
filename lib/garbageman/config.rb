@@ -25,8 +25,8 @@ module GarbageMan
     @@enable_gc_file = "./data/enable_gc"
     def self.enable_gc_file; @@enable_gc_file; end
 
-    @@num_request_before_collecting = nil
-    def self.num_request_before_collecting; @@num_request_before_collecting ||= 40; end
+    @@num_request_before_collecting = 20
+    def self.num_request_before_collecting; @@num_request_before_collecting; end
     def self.num_request_before_collecting=(val); @@num_request_before_collecting = val; end
 
     # can configure to turn on gc if server starts queuing requests
@@ -35,9 +35,17 @@ module GarbageMan
     def self.check_request_queue=(val); @@check_request_queue = val; end
 
     # absolutely make sure we are in the pool again before selecting next server
-    def self.num_request_before_selecting_next_server; 10; end
-    def self.min_servers_to_disable_gc; 3; end
-    # if we have not GC in 20 seconds turn back on GC
-    def self.max_time_without_gc; 20; end
+    @@num_request_before_selecting_next_server = 5
+    def self.num_request_before_selecting_next_server; @@num_request_before_selecting_next_server; end
+    def self.num_request_before_selecting_next_server=(n); @@num_request_before_selecting_next_server = n; end
+
+    @@min_servers_to_disable_gc = 3
+    def self.min_servers_to_disable_gc; @@min_servers_to_disable_gc; end
+    def self.min_servers_to_disable_gc=(n); @@min_servers_to_disable_gc = n; end
+
+    # if we have not GC in 40 seconds turn back on GC
+    @@max_time_without_gc = 40
+    def self.max_time_without_gc; @@max_time_without_gc; end
+    def self.max_time_without_gc=(time); @max_time_without_gc = time; end
   end
 end
