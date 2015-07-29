@@ -85,7 +85,7 @@ module GarbageMan
         end
       end
 
-      FileUtils.touch Config.gc_last_collected_file
+      File.open(Config.gc_last_collected_file, 'w') { |f| f.write Time.now.to_i.to_s }
 
       before_gc_callbacks.each(&:call)
 
@@ -161,7 +161,7 @@ module GarbageMan
     WRITE_MOVE_OPTIONS = {:force => true}
     def write_gc_yaml(index, status)
       config = {'gc' => {'server' => index, 'status' => status}}
-      File.open(Config.gc_yaml_tmp_file, 'w+') { |f| f.write config.to_yaml }
+      File.open(Config.gc_yaml_tmp_file, 'w') { |f| f.write config.to_yaml }
       # atomic write
       FileUtils.mv Config.gc_yaml_tmp_file, Config.gc_yaml_file, WRITE_MOVE_OPTIONS
     end
