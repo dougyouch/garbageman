@@ -84,7 +84,9 @@ module GarbageMan
           return
         end
       end
-      
+
+      FileUtils.touch Config.gc_last_collected_file
+
       before_gc_callbacks.each(&:call)
 
       write_gc_yaml server_index, STARTING

@@ -11,6 +11,10 @@ module GarbageMan
     def self.gc_yaml_tmp_file; @@gc_yaml_tmp_file ||= "./data/.tmp.gc.yml"; end
     def self.gc_yaml_tmp_file=(file); @@gc_yaml_tmp_file = file; end
 
+    @@gc_last_collected_file = nil
+    def self.gc_last_collected_file; @@gc_last_collected_file ||= "./data/gc-last-collection-time.timestamp"; end
+    def self.gc_last_collected_file=(file); @@gc_last_collected_file = file; end
+
     def self.gc_config
       begin
         File.exists?(self.gc_yaml_file) ? YAML.load_file(self.gc_yaml_file) : nil
