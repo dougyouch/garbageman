@@ -20,12 +20,13 @@ module GarbageMan
       WAITED_TOO_LONG = "waited %.2f seconds to gc"
       DISABLE_GC = "disabling gc"
       CANT_TURN_OFF = "enabling gc, can not turn off"
+      CONNECTIONS_DID_NOT_DRAIN_IN_TIME = 'connections did not drain in time'
     end
 
     include Messages
 
     attr_accessor :request_count, :will_collect, :will_select_next_server, :show_gc_times
-    attr_reader :fiber_poll, :last_gc_finished_at, :before_gc_callbacks, :after_gc_callbacks
+    attr_reader :fiber_poll, :last_gc_finished_at, :before_gc_callbacks, :after_gc_callbacks, :selected_to_collect_at
 
     def initialize
       @show_gc_times = true
@@ -57,6 +58,7 @@ module GarbageMan
       end
 
       if should_collect?
+        @selected_to_collect_at ||= Time.now
         write_gc_yaml server_index, WILL_COLLECT
         false
       else
@@ -74,8 +76,15 @@ module GarbageMan
         GC.enable
       end
 
-      return unless can_collect?
-
+      unless can_collect?
+        return unless will_collect # return unless been selected to gc
+        if waited_too_long_for_connections_to_drain?
+          warn CONNECTIONS_DID_NOT_DRAIN_IN_TIME
+        else
+          return
+        end
+      end
+      
       before_gc_callbacks.each(&:call)
 
       write_gc_yaml server_index, STARTING
@@ -159,6 +168,7 @@ module GarbageMan
       @request_count = 0
       @will_collect = false
       @will_select_next_server = false
+      @selected_to_collect_at = nil
     end
 
     def busy?
@@ -232,6 +242,10 @@ module GarbageMan
     def waited_too_long_to_gc?
       return false unless @last_gc_finished_at
       (Time.now - @last_gc_finished_at) >= Config.max_time_without_gc
+    end
+
+    def waited_too_long_for_connections_to_drain?
+      @selected_to_collect_at && (Time.now - @selected_to_collect_at) >= Config.max_connection_drain_time
     end
   end
 end

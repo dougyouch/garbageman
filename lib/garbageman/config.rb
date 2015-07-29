@@ -47,5 +47,10 @@ module GarbageMan
     @@max_time_without_gc = 60
     def self.max_time_without_gc; @@max_time_without_gc; end
     def self.max_time_without_gc=(time); @@max_time_without_gc = time; end
+
+    # max time to wait for connections to drain
+    @@max_connection_drain_time = 60
+    def self.max_connection_drain_time; @@max_connection_drain_time; end
+    def self.max_connection_drain_time=(time); @@max_connection_drain_time = time; end
   end
 end
