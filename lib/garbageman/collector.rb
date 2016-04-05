@@ -30,6 +30,7 @@ module GarbageMan
 
     def initialize
       @show_gc_times = true
+      @show_memory_released = false
       @before_gc_callbacks = []
       @after_gc_callbacks = []
       reset
@@ -91,13 +92,14 @@ module GarbageMan
 
       write_gc_yaml server_index, STARTING
       debug "starting gc"
-      memory_used = @show_gc_times ? process_resident_memory_size_in_kb : 0
+      memory_used = @show_memory_released ? process_resident_memory_size_in_kb : 0
       starts = Time.now
       GC.enable
       Config.gc_starts.times { GC.start; sleep Config.gc_sleep }
       @last_gc_finished_at = Time.now
       diff = (@last_gc_finished_at - starts) * 1000
-      info "GC took #{'%.2f' % diff}ms for #{@request_count} requests, and freed #{memory_used - process_resident_memory_size_in_kb}kb of memory" if @show_gc_times
+      info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times
+      info "GC freed #{memory_used - process_resident_memory_size_in_kb}kb of memory" if @show_memory_released
       write_gc_yaml server_index, NEXT_SERVER
 
       after_gc_callbacks.each(&:call)
