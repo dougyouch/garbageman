@@ -93,7 +93,7 @@ module GarbageMan
       debug "starting gc"
       starts = Time.now
       GC.enable
-      GC.start
+      Config.gc_starts.times { GC.start; sleep Config.gc_sleep }
       @last_gc_finished_at = Time.now
       diff = (@last_gc_finished_at - starts) * 1000
       info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times
@@ -114,7 +114,7 @@ module GarbageMan
 
     def create_gc_yaml
       return unless server_index
-      return if File.exists?(Config.gc_yaml_file)
+      return if File.exists?(Config.gc_yaml_file) && ! current_server?
       write_gc_yaml server_index, SELECTED
     end
 
