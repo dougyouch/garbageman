@@ -91,12 +91,13 @@ module GarbageMan
 
       write_gc_yaml server_index, STARTING
       debug "starting gc"
+      memory_used = @show_gc_times ? process_resident_memory_size_in_kb : 0
       starts = Time.now
       GC.enable
       Config.gc_starts.times { GC.start; sleep Config.gc_sleep }
       @last_gc_finished_at = Time.now
       diff = (@last_gc_finished_at - starts) * 1000
-      info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times
+      info "GC took #{'%.2f' % diff}ms for #{@request_count} requests, and freed #{memory_used - process_resident_memory_size_in_kb}kb of memory" if @show_gc_times
       write_gc_yaml server_index, NEXT_SERVER
 
       after_gc_callbacks.each(&:call)
@@ -110,6 +111,14 @@ module GarbageMan
         warn CANT_TURN_OFF
         GC.enable
       end
+    end
+
+    def process_resident_memory_size_in_kb
+      headers, stats = `ps v #{Process.pid}`.split "\n"
+      return 0 unless headers && stats
+      headers = headers.strip.gsub(/ +/, ' ').split(' ')
+      stats = stats.strip.gsub(/ +/, ' ').split(' ')
+      Hash[headers.zip(stats)]['RSS'].to_i
     end
 
     def create_gc_yaml
