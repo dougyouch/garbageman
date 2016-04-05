@@ -95,7 +95,10 @@ module GarbageMan
       memory_used = @show_memory_released ? process_resident_memory_size_in_kb : 0
       starts = Time.now
       GC.enable
-      Config.gc_starts.times { GC.start; sleep Config.gc_sleep }
+      Config.gc_starts.times do
+        GC.start
+        sleep(Config.gc_sleep) if Config.gc_sleep > 0
+      end
       @last_gc_finished_at = Time.now
       diff = (@last_gc_finished_at - starts) * 1000
       info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times

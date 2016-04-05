@@ -57,11 +57,11 @@ module GarbageMan
     def self.max_connection_drain_time; @@max_connection_drain_time; end
     def self.max_connection_drain_time=(time); @@max_connection_drain_time = time; end
 
-    @@gc_starts = 10
+    @@gc_starts = 1
     def self.gc_starts; @@gc_starts; end
     def self.gc_starts=(v); @@gc_starts = v; end
 
-    @@gc_sleep = 0.05
+    @@gc_sleep = 0.00
     def self.gc_sleep; @@gc_sleep; end
     def self.gc_sleep=(v); @@gc_sleep = v || 10; end
   end
