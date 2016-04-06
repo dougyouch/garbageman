@@ -119,11 +119,15 @@ module GarbageMan
     end
 
     def process_resident_memory_size_in_kb
-      headers, stats = `ps v #{Process.pid}`.split "\n"
-      return 0 unless headers && stats
-      headers = headers.strip.gsub(/ +/, ' ').split(' ')
-      stats = stats.strip.gsub(/ +/, ' ').split(' ')
-      Hash[headers.zip(stats)]['RSS'].to_i
+      if File.exists?('/proc/self/statm')
+        File.read('/proc/self/statm').split(' ')[1]
+      else
+        headers, stats = `ps v #{Process.pid}`.split "\n"
+        return 0 unless headers && stats
+        headers = headers.strip.gsub(/ +/, ' ').split(' ')
+        stats = stats.strip.gsub(/ +/, ' ').split(' ')
+        Hash[headers.zip(stats)]['RSS'].to_i
+      end
     end
 
     def create_gc_yaml
