@@ -160,7 +160,15 @@ module GarbageMan
 
     WRITE_MOVE_OPTIONS = {:force => true}
     def write_gc_yaml(index, status)
-      config = {'gc' => {'server' => index, 'status' => status}}
+      config = {'gc' => {
+                  'server' => index,
+                  'status' => status,
+                  'request_count' => @request_count,
+                  'will_collect' => @will_collect,
+                  'will_select_next_server' => @will_select_next_server,
+                  'selected_to_collect_at' => @selected_to_collect_at.to_s
+                }
+               }
       File.open(Config.gc_yaml_tmp_file, 'w') { |f| f.write config.to_yaml }
       # atomic write
       FileUtils.mv Config.gc_yaml_tmp_file, Config.gc_yaml_file, WRITE_MOVE_OPTIONS
