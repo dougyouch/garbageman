@@ -30,6 +30,7 @@ module GarbageMan
 
     def initialize
       @show_gc_times = true
+      @show_memory_released = false
       @before_gc_callbacks = []
       @after_gc_callbacks = []
       reset
@@ -91,12 +92,17 @@ module GarbageMan
 
       write_gc_yaml server_index, STARTING
       debug "starting gc"
+      memory_used = @show_memory_released ? process_resident_memory_size_in_kb : 0
       starts = Time.now
       GC.enable
-      GC.start
+      Config.gc_starts.times do
+        GC.start
+        sleep(Config.gc_sleep) if Config.gc_sleep > 0
+      end
       @last_gc_finished_at = Time.now
       diff = (@last_gc_finished_at - starts) * 1000
       info "GC took #{'%.2f' % diff}ms for #{@request_count} requests" if @show_gc_times
+      info "GC freed #{memory_used - process_resident_memory_size_in_kb}kb of memory" if @show_memory_released
       write_gc_yaml server_index, NEXT_SERVER
 
       after_gc_callbacks.each(&:call)
@@ -112,9 +118,21 @@ module GarbageMan
       end
     end
 
+    def process_resident_memory_size_in_kb
+      if File.exists?('/proc/self/statm')
+        File.read('/proc/self/statm').split(' ')[1]
+      else
+        headers, stats = `ps v #{Process.pid}`.split "\n"
+        return 0 unless headers && stats
+        headers = headers.strip.gsub(/ +/, ' ').split(' ')
+        stats = stats.strip.gsub(/ +/, ' ').split(' ')
+        Hash[headers.zip(stats)]['RSS'].to_i
+      end
+    end
+
     def create_gc_yaml
       return unless server_index
-      return if File.exists?(Config.gc_yaml_file)
+      return if File.exists?(Config.gc_yaml_file) && ! current_server?
       write_gc_yaml server_index, SELECTED
     end
 
