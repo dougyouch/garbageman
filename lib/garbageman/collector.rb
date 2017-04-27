@@ -130,9 +130,14 @@ module GarbageMan
       end
     end
 
+    # creates the gc yaml file or resets the status back to selected
     def create_gc_yaml
       return unless server_index
-      return if File.exists?(Config.gc_yaml_file) && ! current_server?
+      if File.exists?(Config.gc_yaml_file)
+        return unless current_server?
+      else
+        return unless server_index == 0
+      end
       write_gc_yaml server_index, SELECTED
     end
 
