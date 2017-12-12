@@ -78,6 +78,8 @@ module GarbageMan
       end
 
       unless can_collect?
+        @can_collect_at ||= Time.now
+        return unless (Time.now - @can_collect_at) >= Config.time_to_wait_before_collecting
         return unless will_collect # return unless been selected to gc
         if waited_too_long_for_connections_to_drain?
           warn CONNECTIONS_DID_NOT_DRAIN_IN_TIME
@@ -202,6 +204,7 @@ module GarbageMan
       @will_collect = false
       @will_select_next_server = false
       @selected_to_collect_at = nil
+      @can_collect_at = nil
     end
 
     def busy?

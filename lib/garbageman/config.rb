@@ -64,5 +64,11 @@ module GarbageMan
     @@gc_sleep = 0.00
     def self.gc_sleep; @@gc_sleep; end
     def self.gc_sleep=(v); @@gc_sleep = v || 10; end
+
+    # after selected and connections are drained, wait this many seconds before
+    # collecting so that all proxies are aware that this process will collect
+    @@time_to_wait_before_collecting = 2.0
+    def self.time_to_wait_before_collecting; @@time_to_wait_before_collecting; end
+    def self.time_to_wait_before_collecting=(v); @@time_to_wait_before_collecting = v || 2.0; end
   end
 end
